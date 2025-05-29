@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>facilities map</title>
+    <!-- jquery cdn -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <!-- mapbox -->    
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0px; bottom: 0; width: 100%; }
+    </style>
+    <!-- link to css file -->
+    <link href="./css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    
+    <!-- Header for the sidebar menu -->
+    <div id="open_nav">
+        <div>
+            <img src="./img/menu_bw.png">
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="menu">
+            <form id="target">
+                
+                <!-- List of years -->
+                <table class="years">
+                    <tr>
+                        <td class="year">
+                            <input id="2022" value="2022" name="year" type="radio" checked="checked">
+                            <label for="2022">2022年</label>
+                        </td>
+                        <td class="year">
+                            <input id="2012" value="2012" name="year" type="radio">
+                            <label for="2012">2012年</label>
+                        </td>
+                        <td class="year">
+                            <input id="20122022" value="20122022" name="year" type="radio">
+                            <label for="20122022">差分</label>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- List of indicators -->
+                <table id="list"></table>
+            </form>
+
+            <!-- Link to Chart.js graphs -->
+            <button class="m-1 btn btn-light"><a href="charts.html">グラフ</a></button>
+
+            <!-- Download csv button -->
+            <!--  <div class="dlbtn"> -->
+                <!--  <button><a id="csv" href="./csv/2022/foreigncompanies2022.csv" download="indicators2022.csv">Download CSV</a></button> -->
+            <!--  </div> -->
+
+        </div>
+
+        <!-- footer -->
+        <div id="copyright">
+            <small>© 2022 Mori Memorial Foundation</small>
+        </div>
+        
+    </div>
+
+    <!-- Hide/show the sidebar menu with jquery -->
+    <script>
+        $(document).ready(function(){
+            $('#open_nav').on('click', function(){
+                $('#sidebar').toggleClass('hide');
+            });
+        });
+    </script>
+
+    <!-- To make a list of indicators -->
+    <script>
+        let items = [
+            {value: "foreigncompanies", text: "外資系企業"},
+        ];
+
+        let i = 0;
+        while (i < items.length) {
+            console.log(items.length)
+            var elem1 = items[i].value;
+            var elem2 = items[i].text;
+            
+            const li = 
+            `<tr>
+                <td class="indicator">
+                    <label>
+                        <input id="indicators" value=${elem1} name="cat" type="radio">
+                        <span class="datelabel">${elem2}</span>
+                        <span class="checkmark"></span>
+                    </label>
+                </td>
+            </tr>`
+
+            document.getElementById("list").insertAdjacentHTML("beforeend", li);
+
+            i += 1;
+
+        };
+
+    </script>
+
+
+    <!-- Mapbox code -->
+    <nav id="hideshow_01"></nav>
+    <nav id="hideshow_02"></nav>
+    <div id="map"></div>
+
+    <script type="text/javascript"> 
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoibnlhbWF0byIsImEiOiJja2Y4dzNkOW8wY3MwMnFvM29iNnJzNzVzIn0.GHlHwu3r5YjKBU3qAKvccQ';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: "mapbox://styles/nyamato/ckt5grlhv20td17o5ijrf84wz",
+            zoom: 12,
+            center: [139.72942873681262, 35.660181644624785],
+        });
+        
+        
+        // Tokyo facilities map
+        map.on('load', function () {
+
+            // Add a source for the city polygons.
+            map.addSource('chiyodaward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/chiyoda.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '千代田区',
+                'type': 'fill',
+                'source': 'chiyodaward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(255,0,0,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('chuoward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/chuo.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '中央区',
+                'type': 'fill',
+                'source': 'chuoward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(0,0,255,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('minatoward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/minato.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '港区',
+                'type': 'fill',
+                'source': 'minatoward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(0,128,0,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('shibuyaward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/shibuya.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '渋谷区',
+                'type': 'fill',
+                'source': 'shibuyaward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(255,255,0,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('shinjukuward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/shinjuku.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '新宿区',
+                'type': 'fill',
+                'source': 'shinjukuward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(128,0,128,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('shinagawaward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/shinagawa.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '品川区',
+                'type': 'fill',
+                'source': 'shinagawaward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(255,140,0,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('kotoward', {
+                'type': 'geojson',
+                'data': './geojson/tokyo7/koto.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '江東区',
+                'type': 'fill',
+                'source': 'kotoward',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(25,25,112,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('daimaruyu', {
+                'type': 'geojson',
+                'data': './geojson/areas/daimaruyu.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '大丸有',
+                'type': 'fill',
+                'source': 'daimaruyu',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(255,0,255,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('nippachikyo', {
+                'type': 'geojson',
+                'data': './geojson/areas/nippachikyo.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '日八京',
+                'type': 'fill',
+                'source': 'nippachikyo',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(0,0,255,.3)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('roppongi', {
+                'type': 'geojson',
+                'data': './geojson/areas/roppongi.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '六本木',
+                'type': 'fill',
+                'source': 'roppongi',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(255,165,0,.4)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('toranomon', {
+                'type': 'geojson',
+                'data': './geojson/areas/toranomon.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '虎ノ門',
+                'type': 'fill',
+                'source': 'toranomon',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(255,165,0,.4)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('akasaka', {
+                'type': 'geojson',
+                'data': './geojson/areas/akasaka.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '赤坂',
+                'type': 'fill',
+                'source': 'akasaka',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(0,128,0,.5)'
+                }
+            });
+
+            // Add a source for the city polygons.
+            map.addSource('wider_toranomon', {
+                'type': 'geojson',
+                'data': './geojson/areas/wider_toranomon.geojson'
+            });
+
+            // Add a layer showing the city polygons.
+            map.addLayer({
+                'id': '広域虎ノ門',
+                'type': 'fill',
+                'source': 'wider_toranomon',
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'fill-color': 'rgba(0,128,0,.5)'
+                }
+            });
+
+            // After the last frame rendered before the map enters an "idle" state.
+            map.on('idle', () => {
+                // If these two layers were not added to the map, abort
+                if (!map.getLayer('千代田区') || !map.getLayer('中央区') || !map.getLayer('港区') || !map.getLayer('渋谷区') || !map.getLayer('新宿区') || !map.getLayer('品川区') || !map.getLayer('江東区') || !map.getLayer('大丸有') || !map.getLayer('日八京') || !map.getLayer('六本木') || !map.getLayer('虎ノ門') || !map.getLayer('赤坂') || !map.getLayer('広域虎ノ門')) {
+                    return;
+                }
+
+                // Enumerate ids of the layers.
+                const toggleLayer_01 = ['千代田区', '中央区', '港区', '渋谷区', '新宿区', '品川区', '江東区'];
+
+                // Enumerate ids of the layers.
+                const toggleLayer_02 = ['大丸有', '日八京', '六本木', '虎ノ門', '赤坂', '広域虎ノ門'];
+
+                // Set up the corresponding toggle button for each layer.
+                for (const id of toggleLayer_01) {
+                    console.log(id)
+
+                    // Skip layers that already have a button set up.
+                    if (document.getElementById(id)) {
+                        continue;
+                    };
+
+                    // Create a link.
+                    const link = document.createElement('a');
+                    console.log(link)
+
+                    link.id = id;
+                    link.href = '#';
+                    link.textContent = id;
+                    link.className = '';
+
+                    // Show or hide layer when the toggle is clicked.
+                    link.onclick = function (e) {
+
+                        console.log(e)
+                        const clickedLayer = this.textContent;
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const visibility = map.getLayoutProperty(
+                            clickedLayer,
+                            'visibility'
+                        );
+
+                        // Toggle layer visibility by changing the layout object's visibility property.
+                        if (visibility === 'visible') {
+                            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                            this.className = '';
+                        } else {
+                            this.className = 'active';
+                            map.setLayoutProperty(
+                                clickedLayer,
+                                'visibility',
+                                'visible'
+                            );
+                        };
+                    };
+
+                    const layers = document.getElementById('hideshow_01');
+                    layers.appendChild(link);
+
+                };
+
+                // Set up the corresponding toggle button for each layer.
+                for (const id of toggleLayer_02) {
+                    // Skip layers that already have a button set up.
+                    if (document.getElementById(id)) {
+                        continue;
+                    };
+
+                    // Create a link.
+                    const link = document.createElement('a');
+                    link.id = id;
+                    link.href = '#';
+                    link.textContent = id;
+                    link.className = '';
+
+                    // Show or hide layer when the toggle is clicked.
+                    link.onclick = function (e) {
+                        const clickedLayer = this.textContent;
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const visibility = map.getLayoutProperty(
+                            clickedLayer,
+                            'visibility'
+                        );
+
+                        // Toggle layer visibility by changing the layout object's visibility property.
+                        if (visibility === 'visible') {
+                            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+                            this.className = '';
+                        } else {
+                            this.className = 'active';
+                            map.setLayoutProperty(
+                                clickedLayer,
+                                'visibility',
+                                'visible'
+                            );
+                        };
+                    };
+
+                    const layers = document.getElementById('hideshow_02');
+                    layers.appendChild(link);
+
+                };
+                
+            });
+
+
+            // make a list of data sources
+            var sourcelayer = [
+                /* 2022 */
+                ['foreigncompanies2022', './geojson/2022/foreigncompanies2022.geojson'],
+                /* 2012 */
+                ['foreigncompanies2012', './geojson/2012/foreigncompanies2012.geojson'],
+                /* 20122022 */
+                ['foreigncompanies20122022', './geojson/20122022/foreigncompanies20122022.geojson'],
+          
+            ];
+        
+            function addsourcelayer(d) {
+                for (var i = 0; i < d.length; i++) {
+                        map.addSource(d[i][0], {
+                        type: 'geojson',
+                        data: d[i][1],
+                    });
+
+                    map.addLayer({
+                        id: d[i][0],
+                        type: 'circle',
+                        source: d[i][0],
+                        paint: {
+                            'circle-radius': 1.5,
+                            'circle-stroke-width': 2,
+                            'circle-color': 'red',
+                            'circle-stroke-color': 'red'
+                        },
+                        layout: {
+                            visibility: 'visible',
+                        }
+                    });
+                    
+                    // Create a popup, but don't add it to the map yet.
+                    const popup = new mapboxgl.Popup({
+                        closeButton: false,
+                        closeOnClick: false
+                    });
+                    
+                    map.on('mouseenter', d[i][0], (e) => {
+                        // Change the cursor style as a UI indicator.
+                        map.getCanvas().style.cursor = 'pointer';
+                        
+                        // Copy coordinates array.
+                        const coordinates = e.features[0].geometry.coordinates.slice();      
+                        const description = e.features[0].properties["和文社名"];
+                        console.log(description)
+                        
+                        // Ensure that if the map is zoomed out such that multiple copies of the feature are visible, 
+                        // the popup appears over the copy being pointed to.
+                        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                        };
+                        
+                        // Populate the popup and set its coordinates based on the feature found.
+                        popup.setLngLat(coordinates).setHTML(description).addTo(map);
+                    });
+                    
+                    map.on('mouseleave', d[i][0], () => {
+                        map.getCanvas().style.cursor = '';
+                        popup.remove();
+                    });
+                };
+            };
+            
+            addsourcelayer(sourcelayer)
+
+            /*
+            Loads map based on selected date
+            IMPORTANT: Add new dataset names into "layers" array
+            */
+
+            document.getElementById('target').addEventListener('change', function(e) {
+
+                var cat = document.querySelector('input[name="cat"]:checked').value
+                var year = document.querySelector('input[name="year"]:checked').value
+                var clicked = cat+year
+
+                var layers = [
+                    /* 2022 */
+                    "foreigncompanies2022",
+                    /* 2012 */
+                    "foreigncompanies2012",
+                    /* 20122022 */
+                    "foreigncompanies20122022",
+                ];
+
+                for (var i = 0; i < layers.length; i++) {
+                    var layer = layers[i]
+                    if (clicked === layer) {
+                        map.setLayoutProperty(layer, 'visibility', 'visible')
+                        var inactiveLayers = layers.filter(el => el !== layer)
+                        for (var i = 0; i < inactiveLayers.length; i++) {
+                            inactiveLayer = inactiveLayers[i]
+                            map.setLayoutProperty(inactiveLayer, 'visibility', 'none')
+                        }
+                    } else {
+                        map.setLayoutProperty(layer, 'visibility', 'none')
+                    };
+                };
+                
+                // Replace year and category of the download button.
+                function Replace(year) {
+                    let link = document.getElementById('csv');
+                    let url = './csv/' + year + '/' + cat + year + '.csv';
+
+                    // Change the href
+                    link.setAttribute('href', url);
+
+                    let excel =document.getElementById("csv")
+                    let newexcel = cat + year + ".csv"
+                    excel.download = newexcel
+                };
+
+                Replace(year)
+
+            });
+            
+            // Call the functions with default arguments
+            document.getElementById("indicators").click();
+            document.getElementById('2022').click();
+
+        });
+
+    </script>
+
+</body>
+</html>
